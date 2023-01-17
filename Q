@@ -1,0 +1,64 @@
+<?php
+
+/*
+@bot_tele1
+@api_tele
+*/
+
+ob_start();
+$API_KEY = ""; //your token bot
+define("API_KEY",$API_KEY);
+function bot($method,$str=[]){
+        $http_build_query = http_build_query($str);
+        $api = "https://api.telegram.org/bot".API_KEY."/".$method."?$http_build_query";
+        $http_build_query = file_get_contents($api);
+        return json_decode($http_build_query);
+}
+
+$update = json_decode(file_get_contents("php://input"));
+$message = $update->message;
+$from_id = $message->from->id;
+$chat_id = $message->chat->id;
+$text = $message->text;
+$message_id = $message->message_id;
+$get = json_decode(file_get_contents("https://api-code.ga/quran/quran.php?search=" . $text))->get;
+$res = $get->result;
+$count = $get->count;
+
+
+
+if($text == "/start"){
+bot("sendMessage",[
+"chat_id"=>$chat_id,
+"text"=>"حياك الله في خدمة الباحث القرآني
+
+اكتب ما تذكره من الآية القرآنية حتى أقوم بالبحث في القرآن الكريم وجلب جميع النتائج المطابقة
+
+مثال:
+الله نور السماوات والأرض 
+
+خدمة الباحث القرآني على الانترنت :
+www.api-quran.cf",
+reply_to_message_id=>$message_id,
+]);
+}
+
+
+
+if ( $text && $text != "/start" ) {
+bot("sendMessage",[
+"chat_id"=>$chat_id,
+"text"=>$res,
+reply_to_message_id=>$message_id,
+]);
+for( $i=0; $i < $count; $i++){
+$r = $i + 1;
+$aya = "aya".$r;
+$lo = $get->$aya;
+bot("sendMessage",[
+"chat_id"=>$chat_id,
+"text"=>$lo,
+]);
+}
+}
+?>
